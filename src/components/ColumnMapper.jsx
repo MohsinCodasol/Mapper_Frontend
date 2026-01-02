@@ -51,6 +51,11 @@ export default function ColumnMapper({
         setOutputOrder(Array.from(cols));
     }, [baseConfigs]);
 
+    useEffect(() => {
+    setCombineDraft({ columns: [""], delimiter: "|", target: "", source: "" });
+    setEditIndex(null);
+}, [selectedBase]);
+
     /* ---------------- MAPPING ---------------- */
 
     const saveMapping = () => {
@@ -114,7 +119,7 @@ export default function ColumnMapper({
         setCombineDraft(p => ({ ...p, columns: [...p.columns, ""] }));
 
     const saveCombine = () => {
-        if (!combineDraft.target || combineDraft.columns.length < 2) return;
+        if (!combineDraft.target || combineDraft.columns.length < 1) return;
 
         setBaseConfigs(prev => {
             const list = [...prev[selectedBase].combine];
@@ -131,9 +136,15 @@ export default function ColumnMapper({
     };
 
     const editCombine = (rule, i) => {
-        setCombineDraft(rule);
+        setCombineDraft({
+            columns: [...rule.columns],
+            delimiter: rule.delimiter || "|",
+            target: rule.target || "",
+            source: rule.source || ""
+        });
         setEditIndex(i);
     };
+
 
     const deleteCombine = i => {
         setBaseConfigs(prev => ({
@@ -193,28 +204,28 @@ export default function ColumnMapper({
                                         <strong>{g}</strong>
                                         {cols.map(c => (
                                             <div key={c.key} className="my-2 row">
-                                               
-                                                    <div className="col-md-4 text-start">
-                                                        <label>{c.label}</label>
-                                                    </div>
-                                                    <div className="col-md-6">
-                                                        <input
-                                                            className="form-control"
-                                                            placeholder={c.label}
-                                                            value={mappingDraft[c.key] || baseConfigs[selectedBase].mapping[c.key] || ""}
-                                                            onChange={e =>
-                                                                setMappingDraft(p => ({ ...p, [c.key]: e.target.value }))
-                                                            }
-                                                        />
-                                                    </div>
 
-                                                    <div className="col-md-2">
-                                                        {baseConfigs[selectedBase].mapping[c.key] && (
-                                                            <button className="btn btn-outline-danger ms-2"
-                                                                onClick={() => removeMapping(c.key)}>✖</button>
-                                                        )}
-                                                    </div>
-                                              
+                                                <div className="col-md-4 text-start">
+                                                    <label>{c.label}</label>
+                                                </div>
+                                                <div className="col-md-6">
+                                                    <input
+                                                        className="form-control"
+                                                        placeholder={c.label}
+                                                        value={mappingDraft[c.key] || baseConfigs[selectedBase].mapping[c.key] || ""}
+                                                        onChange={e =>
+                                                            setMappingDraft(p => ({ ...p, [c.key]: e.target.value }))
+                                                        }
+                                                    />
+                                                </div>
+
+                                                <div className="col-md-2">
+                                                    {baseConfigs[selectedBase].mapping[c.key] && (
+                                                        <button className="btn btn-outline-danger ms-2"
+                                                            onClick={() => removeMapping(c.key)}>✖</button>
+                                                    )}
+                                                </div>
+
 
 
 
@@ -291,6 +302,49 @@ export default function ColumnMapper({
                                 <button className="btn btn-primary" onClick={saveCombine}>
                                     {editIndex !== null ? "Update Combine" : "Save Combine"}
                                 </button>
+
+                                {/* ===== SAVED COMBINE RULES ===== */}
+                                {baseConfigs[selectedBase].combine.length > 0 && (
+                                    <div className="mt-3 border-top pt-3">
+                                        <div className="fw-bold mb-2">Saved Combine Rules</div>
+
+                                        {baseConfigs[selectedBase].combine.map((rule, i) => (
+                                            <div
+                                                key={i}
+                                                className="d-flex justify-content-between align-items-center border rounded p-2 mb-2"
+                                            >
+                                                <div>
+                                                    <div className="fw-semibold">{rule.target}</div>
+                                                    <div className="small text-muted">
+                                                        {rule.columns.join(" | ")}
+                                                        {rule.source && (
+                                                            <span className="badge bg-info ms-2">
+                                                                Source: {rule.source}
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                </div>
+
+                                                <div className="d-flex gap-2">
+                                                    <button
+                                                        className="btn btn-sm btn-outline-primary"
+                                                        onClick={() => editCombine(rule, i)}
+                                                    >
+                                                        ✏ Edit
+                                                    </button>
+
+                                                    <button
+                                                        className="btn btn-sm btn-outline-danger"
+                                                        onClick={() => deleteCombine(i)}
+                                                    >
+                                                        🗑 Delete
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+
                             </div>
                         </div>
                     )}
